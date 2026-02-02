@@ -1,17 +1,17 @@
-# 🎯 Sistem Pelatihan Gerakan Berbasis IoT dan Machine Learning
+# Wearable Motion Tracking Berbasis IoT Untuk Latihan Ling Tien Kung
 
-## 📋 Deskripsi Proyek
+## Deskripsi Proyek
 
 ### Latar Belakang
-Sistem ini dirancang untuk membantu pengguna dalam melatih gerakan dengan feedback real-time melalui analisis sensor dan machine learning. Mengintegrasikan wearable IoT, backend API, machine learning, dan aplikasi web untuk pengalaman pelatihan yang komprehensif.
+Proyek capstone ini mengembangkan sistem pelatihan **Ling Tien Kung** berbasis **Wearable IoT** untuk memantau dan mengevaluasi gerakan pengguna menggunakan **Machine Learning**.
 
 ### Apa yang Dibangun
-Platform pelatihan gerakan interaktif yang menggabungkan teknologi IoT (sensor wearable), analisis data real-time, dan model machine learning untuk memberikan skor akurasi gerakan kepada pengguna.
+Platform pelatihan gerakan yang terintegrasi antara **sensor wearable**, **broker IoT**, **backend API**, **ML server**, dan **aplikasi web** untuk menghasilkan skor kemiripan gerakan pengguna dengan gerakan master.
 
 ### Untuk Siapa
-- **Pengguna Pelatihan**: Individu yang ingin melatih dan memonitor progres gerakan mereka
-- **Admin/Instruktur**: Mengelola pengguna, sesi pelatihan, dan memonitor data sistem
-- **Peneliti**: Analisis data gerakan dan machine learning
+- **Pengguna**: Melakukan latihan dan melihat hasil serta riwayat latihan  
+- **Admin/Instruktur**: Mengelola pengguna dan data latihan  
+- **Akademik/Peneliti**: Analisis data gerakan dan performa model ML
 
 ---
 
@@ -20,37 +20,34 @@ Platform pelatihan gerakan interaktif yang menggabungkan teknologi IoT (sensor w
 - 👤 **Manajemen Pengguna**
   - Registrasi dan login pengguna
   - Persetujuan akun oleh admin
-  - Deaktivasi akun pengguna
-  - Manajemen role (admin, user)
+  - Aktivasi dan deaktivasi akun
+  - Pengelolaan role (admin & user)
 
-- 🏋️ **Manajemen Sesi Latihan**
-  - Memulai sesi latihan baru
-  - Menghentikan sesi pelatihan
-  - Menyelesaikan dan menyimpan hasil pelatihan
-  - Pencatatan detail waktu dan durasi latihan
+- 🏋️ **Manajemen Latihan**
+  - Kontrol latihan (start, stop, finish)
+  - Pencatatan waktu dan durasi latihan
+  - Penyimpanan hasil latihan otomatis
 
-- 📡 **Monitoring Sensor Real-Time**
-  - Penerimaan data sensor wearable via MQTT
-  - Visualisasi data sensor secara real-time
-  - Sinkronisasi data dengan backend
+- 📡 **Integrasi Wearable IoT**
+  - Penerimaan data sensor dari wearable melalui broker MQTT
+  - Pengiriman data sensor ke backend secara real-time
 
 - 🤖 **Analisis Machine Learning**
-  - Model LSTM untuk prediksi gerakan
-  - Perhitungan skor kemiripan gerakan
-  - Klasifikasi akurasi gerakan
+  - Perhitungan skor kemiripan gerakan dengan gerakan master
+  - Penyajian hasil analisis dalam bentuk skor persentase
 
-- 📊 **Riwayat dan Analitik**
-  - Riwayat lengkap setiap sesi latihan
-  - Export data pelatihan
-  - Dashboard statistik untuk admin
-  - Grafik progress pengguna
+- 📊 **Riwayat & Hasil Latihan**
+  - Riwayat latihan pengguna
+  - Detail hasil setiap sesi latihan
+  - Download data latihan oleh admin
 
-- 🔌 **Koneksi Perangkat**
-  - Pairing wearable device
-  - Status koneksi real-time
-  - Manajemen multiple devices
+- 🛠️ **Manajemen Admin**
+  - Melihat seluruh aktivitas latihan pengguna
+  - Menghapus data latihan
+  - Monitoring sistem pelatihan
 
 ---
+
 
 ## 🏗️ Arsitektur Sistem
 
@@ -64,7 +61,7 @@ Platform pelatihan gerakan interaktif yang menggabungkan teknologi IoT (sensor w
 ┌─────────────────────────────────────────────────────────┐
 │                  Backend API                            │
 │             (Node.js + Express.js)                      │
-│          - Authentication & Authorization              │
+│          - Authentication & Authorization               |
 │          - Business Logic                               │
 │          - Data Management                              │
 └────────┬──────────────────────────┬──────────────────────┘
@@ -76,9 +73,9 @@ Platform pelatihan gerakan interaktif yang menggabungkan teknologi IoT (sensor w
     │ MySQL   │              │  (Python/LSTM)   │
     │         │              │  Prediction Model│
     └─────────┘              └──────────────────┘
-         △                          △
-         │                          │
-┌────────┴──────────────────────────┴──────────────┐
+         △                         
+         │                          
+┌────────┴─────────────────────────────────────────┐
 │           MQTT Broker (Mosquitto)                │
 │                                                  │
 └────────────────────┬─────────────────────────────┘
@@ -91,16 +88,18 @@ Platform pelatihan gerakan interaktif yang menggabungkan teknologi IoT (sensor w
         └────────────────────────┘
 ```
 
-### Alur Komunikasi
-
-1. **Wearable → MQTT Broker**: Sensor mengirim data accelerometer & gyroscope setiap millisecond
-2. **MQTT Broker → Backend**: Backend subscribe dan menerima data real-time
-3. **Backend → Database**: Penyimpanan data sesi latihan
-4. **Backend → ML Service**: Mengirim data untuk prediksi dan scoring
-5. **ML Service → Backend**: Mengembalikan skor akurasi gerakan
-6. **Backend → Frontend**: Menyajikan data via REST API
+### 🔄 Alur Kerja Sistem
+1. **Web User (Next.js)** mengirim permintaan ke **Backend Server** untuk memulai, menghentikan, atau menyelesaikan latihan.
+2. **Backend Server** memproses permintaan user dan mengirim perintah kontrol ke **IoT Device** melalui **MQTT Broker**.
+3. **IoT Device (ESP8266 + GY85)** mengirimkan data sensor gerakan ke **MQTT Broker** selama sesi latihan berlangsung.
+4. **Backend Server** melakukan *subscribe* data sensor dari MQTT Broker dan **menyimpan data sementara selama sesi latihan berjalan**.
+5. Setelah sesi latihan selesai, **Backend Server** mengirimkan kumpulan data sensor ke **ML Server (Flask)** untuk proses analisis gerakan.
+6. **ML Server** mengembalikan **skor kemiripan gerakan** ke Backend.
+7. **Backend Server** menyimpan data latihan dan hasil analisis ke **Database MySQL**.
+8. **Backend** mengirimkan respon berupa status latihan dan hasil analisis ke **Web User**.
 
 ---
+
 
 ## 💻 Teknologi yang Digunakan
 
@@ -118,7 +117,7 @@ Platform pelatihan gerakan interaktif yang menggabungkan teknologi IoT (sensor w
 
 ### Frontend
 - **Framework**: Next.js 14+
-- **Styling**: CSS Modules
+- **Styling**: Tailwind
 - **API Client**: Fetch API
 - **UI Components**: Custom React components
 
@@ -130,7 +129,6 @@ Platform pelatihan gerakan interaktif yang menggabungkan teknologi IoT (sensor w
 - **Format Model**: Keras (.h5/.keras)
 
 ### Deployment & DevOps
-- **Containerization**: Docker (optional)
 - **Database**: MySQL 8.0+
 
 ---
@@ -224,7 +222,7 @@ npm start
 npm run dev
 ```
 
-**Port Default**: `http://localhost:3000`
+**Port Default**: `http://localhost:5000`
 
 ### 3️⃣ Setup ML Service (Python)
 
@@ -247,7 +245,7 @@ pip install -r requirements.txt
 python server.py
 ```
 
-**Port Default**: `http://localhost:5000`
+**Port Default**: `http://localhost:5001`
 
 ### 4️⃣ Setup Frontend (Next.js)
 
@@ -258,7 +256,7 @@ cd web-self-training
 npm install
 
 # Setup environment variables
-echo "NEXT_PUBLIC_API_URL=http://localhost:3000" > .env.local
+echo "NEXT_PUBLIC_API_URL=http://localhost:5000" > .env.local
 
 # Run development server
 npm run dev
@@ -268,7 +266,7 @@ npm run build
 npm start
 ```
 
-**Default**: `http://localhost:3001`
+**Default**: `http://localhost:3000`
 
 ### 5️⃣ Setup MQTT Broker
 
@@ -343,10 +341,10 @@ mosquitto -c mosquitto.conf
 ## 🧠 Dataset & Machine Learning
 
 ### Jenis Data Sensor
+- **Timestamp**: Waktu pengambilan data sensor
 - **Accelerometer (X, Y, Z)**: Perubahan kecepatan linear (gravitasi + gerak)
 - **Gyroscope (X, Y, Z)**: Kecepatan sudut putaran
 - **Sampling Rate**: 100 Hz (setiap 10ms)
-- **Duration**: Per sesi ~30-60 detik
 
 ### Metode Pengolahan Data
 1. **Data Cleaning**: Normalisasi dan filtering noise
@@ -354,16 +352,18 @@ mosquitto -c mosquitto.conf
 3. **Windowing**: Data dipotong setiap 256 samples (~2.5 detik)
 4. **Normalization**: Min-Max scaling ke range [0,1]
 
-### Model Machine Learning
-- **Architecture**: LSTM (3 layers)
-- **Input**:  features (accel X,Y,Z + gyro X,Y,Z)
-- **Output**: Skor akurasi 0-100%
-- **Training Data**: Koleksi gerakan dari berbagai user
-- **Validation Accuracy**: ~95%
+### 🤖 Model Machine Learning
+- **Architecture**: LSTM (2 LSTM layers + Dropout + Dense)
+- **Input**: **16 fitur sensor**, terdiri dari  
+  - Accelerometer (X, Y, Z) tangan & kaki  
+  - Gyroscope (X, Y, Z) tangan & kaki  
+  - Magnetometer (X, Y, Z) tangan & kaki  
+- **Output**: Klasifikasi gerakan (3 kelas) dengan softmax
+- **Training Data**: Data gerakan Ling Tien Kung dari berbagai pengguna
+- **Validation Accuracy**: ±95%
 
 ### Output Model
 - **Skor Kemiripan**: 0-100% (seberapa mirip dengan gerakan ideal)
-- **Confidence**: Tingkat kepercayaan prediksi
 
 ---
 
@@ -372,6 +372,7 @@ mosquitto -c mosquitto.conf
 - **Adam Hidayat** – Fullstack Developer
 - **Gellent Ardiansyah** – Iot Engineer
 - **I Wayan Trisna Ardika** – Machine Learning
+- **Ardiansyah Maulana Putra** – Machine Learning
 
 ---
 
@@ -379,11 +380,9 @@ mosquitto -c mosquitto.conf
 
 - ✅ Proyek ini dibuat untuk keperluan akademik (Capstone Semester 7)
 - ✅ Tidak digunakan untuk keperluan komersial
-- ✅ Dokumentasi per folder tersedia di masing-masing `README.md`
 - ✅ Untuk troubleshooting, lihat folder masing-masing service
 - ✅ Database schema dapat dilihat di file `Database-LingTienKung.sql`
 
 ---
 
 **Last Updated**: Februari 2026  
-**License**: Academic Use Only
