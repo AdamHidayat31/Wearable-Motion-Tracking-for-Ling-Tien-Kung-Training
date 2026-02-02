@@ -381,7 +381,7 @@ mosquitto -c mosquitto.conf
 ## 📝 Catatan Tambahan
 
 - ✅ Proyek ini dibuat untuk keperluan akademik (Capstone Semester 7)
-- ✅ Tidak digunakan untuk keperluan komersial
+- ✅ Untuk IoT **Harus Menggunakan 2 DEVICE**
 - ✅ Untuk troubleshooting, lihat folder masing-masing service
 - ✅ Database schema dapat dilihat di file `Database-LingTienKung.sql`
 
