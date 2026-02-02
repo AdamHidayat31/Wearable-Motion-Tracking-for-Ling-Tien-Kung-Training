@@ -151,15 +151,13 @@ Semester7/
 │   │   ├── routes/                    # API endpoints
 │   │   ├── services/                  # Service layer
 │   │   └── utils/                     # Utility functions
-│   ├── package.json
-│   └── README.md                      # Backend documentation
+│   └── package.json
 │
 ├── ml_server/                         # Python ML Service
 │   ├── server.py                      # Python Flask/API server
 │   ├── lstm_ltk_model.keras           # Trained LSTM model
 │   ├── requirements.txt               # Python dependencies
-│   ├── config.json                    # Configuration
-│   └── README.md                      # ML documentation
+│   └── config.json                    # Configuration
 │
 ├── web-self-training/                 # Next.js Frontend
 │   ├── src/
@@ -168,16 +166,14 @@ Semester7/
 │   │   └── data/                      # Static data/JSON
 │   ├── public/                        # Static assets
 │   ├── package.json
-│   ├── next.config.mjs
-│   └── README.md                      # Frontend documentation
+│   └── next.config.mjs
 │
 └── rekasaya-data/                     # IoT Hardware & Firmware
     ├── sketch_apr21a/                 # Arduino sketch for ESP32
     │   └── sketch_apr21a.ino
     ├── Driver ch340 esp/              # USB driver
     ├── mqtt_control_menu.bat          # MQTT control script
-    ├── INDEX.html                     # Hardware info
-    └── README.md                      # Hardware documentation
+    └── INDEX.html                     # Dashboard Monitoring IoT
 ```
 
 ---
