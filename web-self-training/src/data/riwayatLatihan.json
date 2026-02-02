@@ -1,0 +1,132 @@
+[
+  {
+    "SessionId": "SESS-001",
+    "Tanggal": "14-11-2025",
+    "Pukul": "07.10",
+    "Durasi": 28,
+    "Skor": 65,
+    "status": "Stop",
+    "Akurasi_Gerakan": [
+      {
+        "nama_gerakan": "Jongkok Kocok",
+        "skor_gerakan": 60
+      },
+      {
+        "nama_gerakan": "Jinjit-Jinjit",
+        "skor_gerakan": 70
+      }
+    ]
+  },
+  {
+    "SessionId": "SESS-002",
+    "Tanggal": "15-11-2025",
+    "Pukul": "14.20",
+    "Durasi": 34,
+    "Skor": 78,
+    "status": "Selesai",
+    "Akurasi_Gerakan": [
+      {
+        "nama_gerakan": "Jongkok Delapan Titik",
+        "skor_gerakan": 78
+      }
+    ]
+  },
+  {
+    "SessionId": "SESS-003",
+    "Tanggal": "16-11-2025",
+    "Pukul": "09.00",
+    "Durasi": 55,
+    "Skor": 83,
+    "status": "Selesai",
+    "Akurasi_Gerakan": [
+      {
+        "nama_gerakan": "Lipat Pinggang",
+        "skor_gerakan": 85
+      },
+      {
+        "nama_gerakan": "Jongkok Kocok",
+        "skor_gerakan": 80
+      },
+      {
+        "nama_gerakan": "Jinjit-Jinjit",
+        "skor_gerakan": 82
+      },
+      {
+        "nama_gerakan": "Jongkok Delapan Titik",
+        "skor_gerakan": 85
+      }
+    ]
+  },
+  {
+    "SessionId": "SESS-004",
+    "Tanggal": "17-11-2025",
+    "Pukul": "19.45",
+    "Durasi": 23,
+    "Skor": 75,
+    "status": "Selesai",
+    "Akurasi_Gerakan": [
+      {
+        "nama_gerakan": "Jinjit-Jinjit",
+        "skor_gerakan": 70
+      },
+      {
+        "nama_gerakan": "Lipat Pinggang",
+        "skor_gerakan": 80
+      }
+    ]
+  },
+  {
+    "SessionId": "SESS-005",
+    "Tanggal": "18-11-2025",
+    "Pukul": "06.00",
+    "Durasi": 45,
+    "Skor": 92,
+    "status": "Selesai",
+    "Akurasi_Gerakan": [
+      {
+        "nama_gerakan": "Jongkok Delapan Titik",
+        "skor_gerakan": 95
+      },
+      {
+        "nama_gerakan": "Lipat Pinggang",
+        "skor_gerakan": 90
+      },
+      {
+        "nama_gerakan": "Jongkok Kocok",
+        "skor_gerakan": 91
+      }
+    ]
+  },
+  {
+    "SessionId": "SESS-006",
+    "Tanggal": "19-11-2025",
+    "Pukul": "16.15",
+    "Durasi": 10,
+    "Skor": 45,
+    "status": "Stop",
+    "Akurasi_Gerakan": [
+      {
+        "nama_gerakan": "Jinjit-Jinjit",
+        "skor_gerakan": 45
+      }
+    ]
+  },
+  {
+    "SessionId": "SESS-007",
+    "Tanggal": "20-11-2025",
+    "Pukul": "08.30",
+    "Durasi": 34,
+    "Skor": 88,
+    "status": "Running",
+    "Akurasi_Gerakan": [
+      {
+        "nama_gerakan": "Lipat Pinggang",
+        "skor_gerakan": 90
+      },
+      {
+        "nama_gerakan": "Jongkok Kocok",
+        "skor_gerakan": 86
+      }
+    ]
+  }
+]
