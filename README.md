@@ -292,19 +292,26 @@ mosquitto -c mosquitto.conf
 
 2. **Koneksi Perangkat**
    - Nyalakan wearable device (ESP32)
-   - Masuk ke halaman "Koneksi Perangkat"
-   - Pilih device dari list yang terdeteksi
-   - Tunggu status "Connected"
+   - Buka pengaturan **WiFi** pada HP atau laptop
+   - Pilih jaringan WiFi perangkat (contoh: `ESP_LTK_Device`)
+   - Setelah terhubung, pengguna akan diarahkan ke **halaman konfigurasi web**
+   - Pada halaman tersebut:
+     - Pilih WiFi yang akan digunakan perangkat
+     - Masukkan password WiFi
+     - Masukkan **Device ID** dengan format `<username_KakiKiri>` atau `<username_TanganKiri>`
+     - Masukkan **Activity** (nama gerakan Ling Tien Kung)
+     - Masukkan **Port**
+   - Simpan konfigurasi dan tunggu perangkat terhubung ke jaringan
 
 3. **Mulai Latihan**
    - Masuk ke halaman "Halaman Latihan"
    - Pilih jenis gerakan yang ingin dilatih
-   - Klik tombol "Mulai Latihan"
+   - Klik tombol "Start"
    - Eksekusi gerakan dengan wearable device
 
 4. **Hentikan & Selesaikan**
-   - Klik "Hentikan Latihan" untuk pause
-   - Klik "Selesaikan Latihan" untuk mengakhiri sesi
+   - Klik "Stop" untuk pause
+   - Klik "Finish" untuk mengakhiri sesi
    - Sistem akan menghitung skor akurasi
 
 5. **Lihat Hasil & Riwayat**
@@ -330,11 +337,6 @@ mosquitto -c mosquitto.conf
    - Analisis data sensor per sesi
    - Monitor kualitas data
 
-4. **Pemantauan Sistem**
-   - Status koneksi MQTT Broker
-   - Status database
-   - Status ML service
-   - Log sistem
 
 ---
 
