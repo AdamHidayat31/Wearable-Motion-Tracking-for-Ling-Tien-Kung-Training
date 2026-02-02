@@ -1,0 +1,20 @@
+INSERT INTO gerakan_latihan (nama_gerakan, url_gerakan) VALUES
+('Lipat Pinggang', 'https://www.youtube.com/embed/-u2CJ_HcaCc?start=0&end=47'),
+('Jongkok Delapan Titik', 'https://www.youtube.com/embed/hV4o_lYLEb0?start=0&end=47'),
+('Kocok Seluruh Badan', 'https://www.youtube.com/embed/3OxFdDujxdc');
+
+INSERT INTO PERANGKAT_IOT (id_pengguna, nama_perangkat, mac_address, status_koneksi)
+VALUES
+    (2, 'Gellent_Kaki Kanan', 'AA:BB:CC:DD:EE:02', 'online'),
+    (2, 'Gellent_Tangan Kanan', 'AA:BB:CC:DD:EE:03', 'online'),
+    (3, 'Wayan_Kaki Kanan', 'AA:BB:CC:DD:EE:04', 'offline'),
+    (3, 'Wayan_Tangan Kanan', 'AA:BB:CC:DD:EE:05', 'offline');
+
+INSERT INTO SESI_LATIHAN 
+(id_pengguna, waktu_mulai, waktu_selesai, status_sesi, total_durasi)
+VALUES
+(2, '2025-12-07 08:00:00', '2025-12-07 08:30:00', 'selesai', 30),
+(2, '2025-12-09 19:00:00', '2025-12-09 19:45:00', 'selesai', 45),
+(2, '2025-12-11 06:30:00', '2025-12-11 06:50:00', 'selesai', 20),
+(3, '2025-12-08 17:15:00', '2025-12-08 17:55:00', 'selesai', 40),
+(3, '2025-12-10 20:00:00', '2025-12-08 20:30:00', 'selesai', 30);

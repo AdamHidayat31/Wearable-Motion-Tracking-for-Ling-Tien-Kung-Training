@@ -1,0 +1,94 @@
+-- ============================================
+-- TABEL PENGGUNA
+-- ============================================
+CREATE TABLE PENGGUNA (
+    id_pengguna INT AUTO_INCREMENT PRIMARY KEY,
+    nama VARCHAR(100),
+    email VARCHAR(100) UNIQUE,
+    password VARCHAR(255),
+    role ENUM('user', 'admin'),
+    status_pengguna ENUM('active', 'deactive', 'pending'),
+    usia INT,
+    jenis_kelamin ENUM('L','P'),
+    tanggal_daftar TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ============================================
+-- TABEL PERANGKAT_IOT
+-- ============================================
+CREATE TABLE PERANGKAT_IOT (
+    id_perangkat INT AUTO_INCREMENT PRIMARY KEY,
+    id_pengguna INT,
+    nama_perangkat VARCHAR(100),
+    mac_address VARCHAR(50),
+    status_koneksi ENUM('online', 'offline'),
+    tanggal_registrasi TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_pengguna) REFERENCES PENGGUNA(id_pengguna)
+);
+
+-- ============================================
+-- TABEL GERAKAN_LATIHAN
+-- ============================================
+CREATE TABLE GERAKAN_LATIHAN (
+    id_gerakan INT AUTO_INCREMENT PRIMARY KEY,
+    nama_gerakan VARCHAR(100),
+    url_gerakan VARCHAR(250)
+);
+
+-- =================================	===========
+-- TABEL SESI_LATIHAN
+-- ============================================
+CREATE TABLE SESI_LATIHAN (
+    id_sesi INT AUTO_INCREMENT PRIMARY KEY,
+    id_pengguna INT,
+    waktu_mulai DATETIME,
+    waktu_selesai DATETIME,
+    status_sesi ENUM('aktif', 'berhenti', 'selesai'),
+    total_durasi INT,
+    FOREIGN KEY (id_pengguna) REFERENCES PENGGUNA(id_pengguna) ON DELETE CASCADE
+);
+
+-- ============================================
+-- TABEL DATA_SENSOR
+-- ============================================
+CREATE TABLE DATA_SENSOR (
+    id_data BIGINT AUTO_INCREMENT PRIMARY KEY,
+    `timestamp` DATETIME(3) NOT NULL,
+    id_perangkat INT NOT NULL,
+    id_gerakan INT NOT NULL,
+    ax DOUBLE,
+    ay DOUBLE,
+    az DOUBLE,
+    gx DOUBLE,
+    gy DOUBLE,
+    gz DOUBLE,
+    mx DOUBLE,
+    my DOUBLE,
+    mz DOUBLE,
+    id_sesi INT NOT NULL,
+    FOREIGN KEY (id_perangkat)
+        REFERENCES PERANGKAT_IOT(id_perangkat)
+        ON DELETE CASCADE,
+    FOREIGN KEY (id_gerakan)
+        REFERENCES GERAKAN_LATIHAN(id_gerakan)
+        ON DELETE CASCADE,
+    FOREIGN KEY (id_sesi)
+        REFERENCES SESI_LATIHAN(id_sesi)
+        ON DELETE CASCADE
+);
+
+
+-- ============================================
+-- TABEL HASIL_ML
+-- ============================================
+CREATE TABLE HASIL_ML (
+    id_analisis INT AUTO_INCREMENT PRIMARY KEY,
+    id_gerakan INT,
+    id_sesi INT,
+    persentase_kecocokan FLOAT,
+    skor_kualitas FLOAT,
+    catatan_feedback TEXT,
+    waktu_analisis TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_gerakan) REFERENCES GERAKAN_LATIHAN(id_gerakan) ON DELETE CASCADE,
+    FOREIGN KEY (id_sesi) REFERENCES SESI_LATIHAN(id_sesi) ON DELETE CASCADE
+);

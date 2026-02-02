@@ -1,0 +1,29 @@
+{
+    "window_size": 9,
+    "step_size": 9,
+    "sensor_order": [
+        "ax_tangan",
+        "ay_tangan",
+        "az_tangan",
+        "gx_tangan",
+        "gy_tangan",
+        "gz_tangan",
+        "mx_tangan",
+        "my_tangan",
+        "mz_tangan",
+        "ax_kaki",
+        "ay_kaki",
+        "az_kaki",
+        "gx_kaki",
+        "gy_kaki",
+        "gz_kaki",
+        "mx_kaki",
+        "my_kaki",
+        "mz_kaki"
+    ],
+    "labels": [
+        "Jongkok 8 Titik",
+        "Lipat Pinggang",
+        "Kocok Seluruh Badan"
+    ]
+}

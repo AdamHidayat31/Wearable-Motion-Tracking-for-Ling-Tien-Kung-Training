@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Wearable Motion Tracking Dashboard (MQTT)</title>
+
+  <!-- MQTT.js dan Chart.js -->
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <style>
+    :root{
+      --bg-gradient-1: #667eea;
+      --bg-gradient-2: #764ba2;
+      --card-bg: #ffffff;
+      --text: #222;
+      --muted: #666;
+      --accent: #667eea;
+      --success: #11998e;
+      --danger: #eb3349;
+    }
+
+    [data-theme="dark"]{
+      --card-bg: #111217;
+      --text: #e6eef8;
+      --muted: #9aa7bf;
+      --bg-gradient-1: #0f1724;
+      --bg-gradient-2: #10233a;
+      --accent: #4f46e5;
+    }
+
+    html,body{
+      height:100%;
+      margin:0;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      color:var(--text);
+      background: linear-gradient(135deg, var(--bg-gradient-1) 0%, var(--bg-gradient-2) 100%);
+    }
+
+    .container{
+      max-width:1400px;
+      margin:28px auto;
+      background:var(--card-bg);
+      border-radius:14px;
+      padding:22px;
+      box-shadow: 0 12px 40px rgba(2,6,23,0.35);
+    }
+
+    header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+    }
+
+    h1{
+      margin:0;
+      font-size:20px;
+      color:var(--accent);
+    }
+    .sub{
+      font-size:13px;
+      color:var(--muted);
+    }
+
+    #status{
+      padding:10px 14px;
+      border-radius:10px;
+      font-weight:600;
+      min-width:260px;
+      text-align:center;
+    }
+    .status-connected{ background:#d4edda; color:#155724; border:1px solid #c3e6cb; }
+    .status-disconnected{ background:#f8d7da; color:#721c24; border:1px solid #f5c6cb; }
+    .status-active{ background:#fff3cd; color:#856404; border:1px solid #ffeaa7; }
+
+    .controls{
+      margin:18px 0;
+      padding:16px;
+      border-radius:10px;
+      background: linear-gradient(180deg, rgba(0,0,0,0.02), rgba(0,0,0,0.01));
+    }
+
+    select, .btn {
+      padding:10px 14px;
+      border-radius:8px;
+      font-size:14px;
+      border:1px solid rgba(0,0,0,0.12);
+      cursor:pointer;
+    }
+
+    .btn{
+      margin:6px;
+      font-weight:700;
+      box-shadow:0 6px 14px rgba(2,6,23,0.08);
+      transition:all .18s ease;
+      border:none;
+    }
+    .btn:active{ transform:translateY(1px); }
+
+    .btn-start{ background:linear-gradient(135deg,var(--success), #38ef7d); color:white; }
+    .btn-stop{ background:linear-gradient(135deg,var(--danger), #f45c43); color:white; }
+    .btn-download{ background:linear-gradient(135deg,#4776e6,#8e54e9); color:white; }
+
+    .info-badge{
+      display:inline-block;
+      padding:6px 10px;
+      border-radius:18px;
+      margin:6px 6px 0 0;
+      font-size:13px;
+      background:var(--accent);
+      color:white;
+    }
+
+    #output{
+      margin-top:12px;
+      border-radius:10px;
+      overflow:auto;
+      border:1px solid rgba(0,0,0,0.06);
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.02));
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      font-size:13px;
+      min-width:1100px;
+    }
+    th,td{
+      padding:10px 8px;
+      border-bottom:1px solid rgba(0,0,0,0.06);
+      text-align:center;
+    }
+    th{
+      position:sticky;
+      top:0;
+      background:linear-gradient(90deg,var(--bg-gradient-1),var(--bg-gradient-2));
+      color:white;
+      z-index:3;
+      font-weight:700;
+    }
+    tr:nth-child(even){ background: rgba(0,0,0,0.02); }
+    tr.command-row{ background: #fffacd; font-weight:700; color:#856404; }
+
+    .charts{
+      display:grid;
+      grid-template-columns:1fr;
+      gap:18px;
+      margin-top:18px;
+    }
+
+    canvas{ width:100% !important; height:320px !important; background:transparent; border-radius:8px; }
+
+    .top-row{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+
+    .right-controls{
+      display:flex;
+      gap:10px;
+      align-items:center;
+    }
+
+    .toggle {
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      font-size:13px;
+    }
+
+    @media(min-width:1000px){
+      .charts{ grid-template-columns: 1fr 1fr; }
+      canvas{ height:300px !important; }
+    }
+
+    /* small helper */
+    .muted{ color:var(--muted); font-size:13px; }
+  </style>
+</head>
+<body>
+  <div class="container" id="app">
+    <header>
+      <div>
+        <h1>🥋 Wearable Motion Tracking Dashboard (MQTT)</h1>
+        <div class="sub">Realtime sensor dashboard — koneksi ke broker lokal (WebSocket)</div>
+      </div>
+
+      <div class="right-controls">
+        <div id="status" class="status-disconnected">🔴 Menghubungkan ke broker...</div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;">
+          <div style="display:flex;gap:8px;align-items:center;">
+            <label class="toggle">
+              <input id="themeToggle" type="checkbox" />
+              <span class="muted">Dark / Light</span>
+            </label>
+            <button id="clearBtn" class="btn" title="Bersihkan tabel">🧹 Bersihkan</button>
+          </div>
+          <div class="muted" style="margin-top:6px;font-size:12px;">Broker ws://172.20.10.2:9001/mqtt</div>
+        </div>
+      </div>
+    </header>
+
+    <div class="controls">
+      <div class="top-row">
+        <div>
+          <select id="deviceSelect">
+            <option value="all">📊 Semua Perangkat</option>
+          </select>
+          <button class="btn btn-start" id="startBtn">▶️ Mulai Data</button>
+          <button class="btn btn-stop" id="stopBtn">⏸️ Hentikan Data</button>
+          <button class="btn btn-download" id="downloadBtn">💾 Unduh CSV</button>
+        </div>
+        <div style="margin-left:auto">
+          <div id="infoPanel"></div>
+        </div>
+      </div>
+    </div>
+
+    <h2 style="margin:0 0 8px 0">📋 Data Realtime</h2>
+    <div id="output" style="max-height: 400px; overflow-y: auto; border-radius: 10px;">
+	<table id="dataTable" aria-live="polite">
+
+        <thead>
+          <tr>
+            <th>Timestamp</th>
+            <th>Device ID</th>
+            <th>Activity</th>
+            <th>AX (m/s²)</th>
+            <th>AY (m/s²)</th>
+            <th>AZ (m/s²)</th>
+            <th>GX</th>
+            <th>GY</th>
+            <th>GZ</th>
+            <th>MX (uT)</th>
+            <th>MY (uT)</th>
+            <th>MZ (uT)</th>
+          </tr>
+        </thead>
+        <tbody id="dataBody"></tbody>
+      </table>
+    </div>
+
+    <div class="charts" style="margin-top:18px;">
+      <div>
+        <h3 style="margin:6px 0;">📈 Akselerometer (m/s²)</h3>
+        <canvas id="accelChart"></canvas>
+      </div>
+      <div>
+        <h3 style="margin:6px 0;">🔄 Giroskop (raw)</h3>
+        <canvas id="gyroChart"></canvas>
+      </div>
+      <div>
+        <h3 style="margin:6px 0;">🧭 Magnetometer (uT)</h3>
+        <canvas id="magChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /**********************
+     * KONFIGURASI BROKER *
+     **********************/
+    // WebSocket URL sesuai permintaan:
+    const BROKER_WS = 'ws://172.20.10.2:9001/mqtt';
+
+    // opsi mqtt.js
+    const client = mqtt.connect(BROKER_WS, {
+      clientId: 'WebDashboard_' + Math.random().toString(16).slice(2,10),
+      connectTimeout: 10000,
+      keepalive: 60,
+      clean: true,
+      reconnectPeriod: 4000
+    });
+
+    /**********************
+     * REFERENSI DOM
+     **********************/
+    const statusDiv = document.getElementById('status');
+    const deviceSelect = document.getElementById('deviceSelect');
+    const dataBody = document.getElementById('dataBody');
+    const infoPanel = document.getElementById('infoPanel');
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const themeToggle = document.getElementById('themeToggle');
+
+    /**********************
+     * STATE & STORAGE
+     **********************/
+    const maxPoints = 30; // titik pada grafik
+    let labels = [];
+    let csvData = []; // array of arrays
+    const devices = new Set(); // daftar device_id
+    let currentDevice = 'all';
+    let isDataCollectionActive = false;
+
+    let dataReceivedCount = 0;
+    let lastDataTime = null;
+
+    /**********************
+     * UTIL FUNCTIONS
+     **********************/
+    function updateInfoPanel(){
+      infoPanel.innerHTML = `
+        <span class="info-badge">📦 Diterima: ${dataReceivedCount}</span>
+        <span class="info-badge">🔢 Devices: ${devices.size}</span>
+        <span class="info-badge">💾 Baris CSV: ${csvData.length}</span>
+        ${lastDataTime ? `<span class="info-badge">⏱️ Terakhir: ${lastDataTime}</span>` : ''}
+      `;
+    }
+
+    function safeNum(v){ return (typeof v === 'number' && !isNaN(v)) ? v : Number(v) || 0; }
+
+    /**********************
+     * CHARTS (Chart.js)
+     **********************/
+    function createLineChart(ctx, datasetLabels){
+      const colors = ['#e74c3c','#2ecc71','#3498db','#e67e22','#9b59b6','#8b4513'];
+      const datasets = datasetLabels.map((label, i) => ({
+        label,
+        data: [],
+        tension: 0.35,
+        borderWidth: 2,
+        pointRadius: 2,
+        fill: false,
+        borderColor: colors[i % colors.length],
+        backgroundColor: colors[i % colors.length] + '22'
+      }));
+
+      return new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets
+        },
+        options: {
+          animation:{ duration:0 },
+          responsive:true,
+          scales:{
+            x:{ display:true },
+            y:{ display:true, beginAtZero:false }
+          },
+          plugins:{ legend:{ position:'top' } }
+        }
+      });
+    }
+
+    const accelChart = createLineChart(
+      document.getElementById('accelChart').getContext('2d'),
+      ['ax','ay','az']
+    );
+    const gyroChart = createLineChart(
+      document.getElementById('gyroChart').getContext('2d'),
+      ['gx','gy','gz']
+    );
+    const magChart = createLineChart(
+      document.getElementById('magChart').getContext('2d'),
+      ['mx','my','mz']
+    );
+
+    /**********************
+     * MQTT EVENTS
+     **********************/
+    client.on('connect', () => {
+      console.log('✅ Terhubung ke broker (WS)');
+      statusDiv.textContent = '🟢 Terhubung ke MQTT Broker';
+      statusDiv.className = 'status-connected';
+
+      // Subscribe topik utama (sesuaikan jika ingin topik lain)
+      client.subscribe('sensor/data/#', { qos: 1 }, (err) => {
+        if (!err) console.log('✅ Subscribed: sensor/data/#');
+      });
+      client.subscribe('sensor/activity/#', { qos: 1 }, (err) => {
+        if (!err) console.log('✅ Subscribed: sensor/activity/#');
+      });
+      client.subscribe('sensor/control', { qos: 1 }, (err) => {
+        if (!err) console.log('✅ Subscribed: sensor/control');
+      });
+
+      updateInfoPanel();
+    });
+
+    client.on('reconnect', () => {
+      console.log('🔄 Mencoba reconnect...');
+      statusDiv.textContent = '🟡 Mencoba reconnect...';
+    });
+
+    client.on('offline', () => {
+      console.log('🔴 Offline');
+      statusDiv.textContent = '🔴 MQTT Offline';
+      statusDiv.className = 'status-disconnected';
+    });
+
+    client.on('error', (err) => {
+      console.error('❌ MQTT Error', err);
+      statusDiv.textContent = '🔴 Error MQTT: ' + (err && err.message ? err.message : String(err));
+      statusDiv.className = 'status-disconnected';
+    });
+
+    client.on('close', () => {
+      console.log('🔒 Connection closed');
+      statusDiv.textContent = '🔴 Terputus';
+      statusDiv.className = 'status-disconnected';
+    });
+
+    client.on('message', (topic, messageBuffer) => {
+      const raw = messageBuffer.toString();
+      // tampilkan di console untuk debugging
+      // console.log('📨', topic, raw);
+
+      let data = null;
+      try {
+        data = JSON.parse(raw);
+      } catch(e){
+        // jika bukan JSON, coba parsing sederhana (misal CSV)
+        console.warn('⚠️ Pesan bukan JSON, akan diabaikan atau diproses sebagai raw text', raw);
+        return;
+      }
+
+      // meng-handle pesan kontrol khusus jika ada
+      if(topic === 'sensor/control'){
+        // contoh: pesan 'ON' atau 'OFF'
+        if(typeof data === 'string' || typeof data === 'number'){
+          // nothing special here - hanya informasi
+        }
+      }
+
+      processIncomingData(topic, data);
+    });
+
+    /**********************
+     * PROSES DATA MASUK
+     **********************/
+    function processIncomingData(topic, data){
+      // standar fields yang kita gunakan
+      const device_id = data.device_id || data.id || 'unknown';
+      const timestamp = data.timestamp || (new Date()).toLocaleString();
+      let activity = data.activity_name || data.activity || 'No Activity';
+
+      // jika topik khusus berisi activities array
+      if (topic.startsWith('sensor/activity') && Array.isArray(data.activities)) {
+        activity = data.activities.map(a => a.name || a).join(', ') || activity;
+      }
+
+      // tambahkan device jika baru
+      if (!devices.has(device_id)) {
+        devices.add(device_id);
+        const opt = document.createElement('option');
+        opt.value = device_id;
+        opt.textContent = '📱 ' + device_id;
+        deviceSelect.appendChild(opt);
+      }
+
+      // simpan CSV row
+      const row = [
+        timestamp,
+        device_id,
+        activity,
+        safeNum(data.ax),
+        safeNum(data.ay),
+        safeNum(data.az),
+        safeNum(data.gx),
+        safeNum(data.gy),
+        safeNum(data.gz),
+        safeNum(data.mx),
+        safeNum(data.my),
+        safeNum(data.mz)
+      ];
+      csvData.push(row);
+      dataReceivedCount++;
+      lastDataTime = (new Date()).toLocaleTimeString();
+
+      updateInfoPanel();
+
+      // tampil dan update chart hanya jika filtering cocok
+      if (currentDevice === 'all' || currentDevice === device_id) {
+        // labels
+        const timeLabel = timestamp;
+        labels.push(timeLabel);
+        if (labels.length > maxPoints) labels.shift();
+
+        // update datasets (push and shift)
+        accelChart.data.datasets[0].data.push(row[3]); // ax
+        accelChart.data.datasets[1].data.push(row[4]); // ay
+        accelChart.data.datasets[2].data.push(row[5]); // az
+        accelChart.data.datasets.forEach(ds => { if (ds.data.length > maxPoints) ds.data.shift(); });
+
+        gyroChart.data.datasets[0].data.push(row[6]); // gx
+        gyroChart.data.datasets[1].data.push(row[7]); // gy
+        gyroChart.data.datasets[2].data.push(row[8]); // gz
+        gyroChart.data.datasets.forEach(ds => { if (ds.data.length > maxPoints) ds.data.shift(); });
+
+        magChart.data.datasets[0].data.push(row[9]); // mx
+        magChart.data.datasets[1].data.push(row[10]); // my
+        magChart.data.datasets[2].data.push(row[11]); // mz
+        magChart.data.datasets.forEach(ds => { if (ds.data.length > maxPoints) ds.data.shift(); });
+
+        accelChart.update();
+        gyroChart.update();
+        magChart.update();
+
+        // tambahkan baris ke tabel
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${timeLabel}</td>
+          <td><strong>${device_id}</strong></td>
+          <td>${activity}</td>
+          <td>${Number(row[3]).toFixed(6)}</td>
+          <td>${Number(row[4]).toFixed(6)}</td>
+          <td>${Number(row[5]).toFixed(6)}</td>
+          <td>${row[6]}</td>
+          <td>${row[7]}</td>
+          <td>${row[8]}</td>
+          <td>${row[9]}</td>
+          <td>${row[10]}</td>
+          <td>${row[11]}</td>
+        `;
+        dataBody.insertBefore(tr, dataBody.firstChild);
+
+        // batasi jumlah baris tabel (misal 200)
+        while (dataBody.children.length > 200) dataBody.removeChild(dataBody.lastChild);
+      }
+    }
+
+    /**********************
+     * KONTROL: MULAI / STOP
+     **********************/
+    function sendControl(cmd) {
+      if (client && client.connected) {
+        const payload = cmd.trim(); // kirim string polos: "ON" / "OFF"
+        client.publish('sensor/control', payload, { qos: 1, retain: false }, (err) => {
+          if (!err) {
+            console.log('✅ Perintah dikirim ke broker:', payload);
+
+            // Tambahkan catatan ke tabel
+            const row = document.createElement('tr');
+            row.className = 'command-row';
+            row.innerHTML = `<td colspan="12">⚡ [${new Date().toLocaleTimeString()}] Perintah dikirim: ${cmd}</td>`;
+            dataBody.insertBefore(row, dataBody.firstChild);
+
+            // Update status tampilan
+            isDataCollectionActive = (cmd.toUpperCase() === 'ON');
+            statusDiv.textContent = isDataCollectionActive
+              ? '🟢 Pengumpulan data AKTIF'
+              : '🟡 Pengumpulan data DIHENTIKAN';
+            statusDiv.className = isDataCollectionActive
+              ? 'status-active'
+              : 'status-connected';
+          } else {
+            console.error('❌ Gagal kirim perintah:', err);
+            statusDiv.textContent = '🔴 Error Publish';
+            statusDiv.className = 'status-disconnected';
+          }
+        });
+      } else {
+        console.warn('❌ Belum terhubung ke broker MQTT!');
+        alert('❌ Tidak terhubung ke broker MQTT (WS). Pastikan Mosquitto membuka listener WebSocket di port 9001.');
+        statusDiv.textContent = '🔴 Tidak terhubung ke broker';
+        statusDiv.className = 'status-disconnected';
+      }
+    }
+
+    // 🔘 Event tombol
+    startBtn.addEventListener('click', () => {
+      console.log('▶️ Tombol Mulai ditekan');
+      sendControl('ON');
+    });
+
+    stopBtn.addEventListener('click', () => {
+      console.log('⏹️ Tombol Hentikan ditekan');
+      sendControl('OFF');
+    });
+
+
+    /**********************
+     * FILTER DEVICE
+     **********************/
+    deviceSelect.addEventListener('change', (e) => {
+      currentDevice = e.target.value;
+      applyFilter();
+    });
+
+    function applyFilter(){
+      // reset charts & labels
+      labels.length = 0;
+      accelChart.data.datasets.forEach(ds => ds.data.length = 0);
+      gyroChart.data.datasets.forEach(ds => ds.data.length = 0);
+      magChart.data.datasets.forEach(ds => ds.data.length = 0);
+      dataBody.innerHTML = '';
+
+      const filtered = currentDevice === 'all' ? csvData : csvData.filter(r => r[1] === currentDevice);
+      // tampilkan paling baru dulu
+      filtered.slice(-200).reverse().forEach(r => {
+        const [timestamp, device_id, activity, ax, ay, az, gx, gy, gz, mx, my, mz] = r;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${timestamp}</td>
+          <td><strong>${device_id}</strong></td>
+          <td>${activity}</td>
+          <td>${Number(ax).toFixed(6)}</td>
+          <td>${Number(ay).toFixed(6)}</td>
+          <td>${Number(az).toFixed(6)}</td>
+          <td>${gx}</td>
+          <td>${gy}</td>
+          <td>${gz}</td>
+          <td>${mx}</td>
+          <td>${my}</td>
+          <td>${mz}</td>
+        `;
+        dataBody.appendChild(tr);
+      });
+
+      // untuk chart, ambil range terakhir maxPoints
+      const chartData = filtered.slice(-maxPoints);
+      chartData.forEach(r => {
+        labels.push(r[0]);
+        accelChart.data.datasets[0].data.push(r[3]);
+        accelChart.data.datasets[1].data.push(r[4]);
+        accelChart.data.datasets[2].data.push(r[5]);
+
+        gyroChart.data.datasets[0].data.push(r[6]);
+        gyroChart.data.datasets[1].data.push(r[7]);
+        gyroChart.data.datasets[2].data.push(r[8]);
+
+        magChart.data.datasets[0].data.push(r[9]);
+        magChart.data.datasets[1].data.push(r[10]);
+        magChart.data.datasets[2].data.push(r[11]);
+      });
+
+      accelChart.update();
+      gyroChart.update();
+      magChart.update();
+
+      console.log('🔍 Filter diterapkan:', currentDevice);
+    }
+
+    /**********************
+     * DOWNLOAD CSV
+     **********************/
+    function downloadCSV(){
+      const filtered = currentDevice === 'all' ? csvData : csvData.filter(r => r[1] === currentDevice);
+      let csv = 'timestamp,device_id,activity,ax,ay,az,gx,gy,gz,mx,my,mz\n';
+      filtered.forEach(r => {
+        // escape commas if ada (sederhana)
+        const escaped = r.map(c => typeof c === 'string' && c.includes(',') ? `"${c.replace(/"/g,'""')}"` : c);
+        csv += escaped.join(',') + '\n';
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const stamp = new Date().toISOString().replace(/[:]/g,'-').slice(0,19);
+      a.download = `sensor_data_${currentDevice}_${stamp}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      console.log('💾 CSV downloaded');
+    }
+
+    downloadBtn.addEventListener('click', downloadCSV);
+
+    /**********************
+     * CLEAR TABLE
+     **********************/
+    clearBtn.addEventListener('click', () => {
+      if (!confirm('Bersihkan tabel dan data CSV dari memori?')) return;
+      csvData.length = 0;
+      labels.length = 0;
+      dataBody.innerHTML = '';
+      accelChart.data.datasets.forEach(ds => ds.data.length = 0);
+      gyroChart.data.datasets.forEach(ds => ds.data.length = 0);
+      magChart.data.datasets.forEach(ds => ds.data.length = 0);
+      accelChart.update();
+      gyroChart.update();
+      magChart.update();
+      devices.clear();
+      // tetap pertahankan opsi "all"
+      deviceSelect.innerHTML = '<option value="all">📊 Semua Perangkat</option>';
+      dataReceivedCount = 0;
+      updateInfoPanel();
+    });
+
+    /**********************
+     * THEME TOGGLE
+     **********************/
+    // default theme: light; toggle switches data-theme on <html>
+    function applyTheme(isDark){
+      document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+      themeToggle.checked = isDark;
+    }
+    themeToggle.addEventListener('change', () => applyTheme(themeToggle.checked));
+    // restore preference if available
+    const savedTheme = localStorage.getItem('wmtd_theme');
+    if (savedTheme) applyTheme(savedTheme === 'dark');
+    themeToggle.addEventListener('change', () => {
+      localStorage.setItem('wmtd_theme', themeToggle.checked ? 'dark' : 'light');
+    });
+
+    /**********************
+     * SAFETY: sebelumunload
+     **********************/
+    window.addEventListener('beforeunload', () => {
+      if (client && client.connected) client.end(true);
+    });
+
+    /**********************
+     * INIT
+     **********************/
+    applyTheme(savedTheme === 'dark');
+
+    // tombol test (opsional) - dapat dihapus
+    // document.getElementById('startBtn').click();
+
+    // set interval untuk update info panel (waktu)
+    setInterval(updateInfoPanel, 1000);
+  </script>
+</body>
+</html>
